@@ -1,0 +1,18 @@
+# Backend
+backend/target/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+
+# IDE
+.idea/
+*.iml
+
+# Secrets
+.env
+backend/.env
+
+# Logs
+*.log

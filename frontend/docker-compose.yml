@@ -1,0 +1,21 @@
+# The dashboard on its own: the production bundle behind nginx.
+#
+#   docker compose up --build      then open http://localhost:8081
+#
+# The API is not started here -- it lives in the inventory-app repository. Bring that up first, and
+# make sure it allows this origin (CORS_ALLOWED_ORIGINS must list http://localhost:8081).
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: inventory-dashboard:latest
+    container_name: inventory-dashboard
+    environment:
+      # Resolved by the browser, not by this container, so it names the API's published port on the
+      # host rather than a compose service name.
+      API_BASE_URL: ${API_BASE_URL:-http://localhost:8080/api}
+    ports:
+      - "${FRONTEND_PUBLISHED_PORT:-8081}:80"
+    restart: on-failure

@@ -1,0 +1,95 @@
+.table-wrap {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow-x: auto;
+  transition: opacity 120ms ease;
+}
+
+.table-wrap--loading {
+  opacity: 0.5;
+}
+
+.table {
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  min-width: 60rem;
+  width: 100%;
+}
+
+.table th {
+  background: var(--surface-muted);
+  border-bottom: 1px solid var(--border);
+  padding: 0;
+  position: sticky;
+  top: 0;
+  white-space: nowrap;
+  z-index: 1;
+}
+
+.sort {
+  background: none;
+  border: 0;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  font: inherit;
+  font-weight: 600;
+  gap: 0.4rem;
+  padding: 0.7rem 0.85rem;
+  width: 100%;
+}
+
+.sort:hover {
+  color: var(--text);
+}
+
+.sort__arrow {
+  color: var(--accent);
+  font-size: 0.7rem;
+}
+
+.table th.table__cell--numeric .sort {
+  justify-content: flex-end;
+}
+
+.table td {
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 0.65rem 0.85rem;
+}
+
+.table tbody tr:hover td {
+  background: var(--surface-muted);
+}
+
+.table__cell--numeric {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.table__cell--sku {
+  font-family: var(--font-mono);
+}
+
+.table__cell--muted {
+  color: var(--text-muted);
+}
+
+.table__cell--warn {
+  color: var(--warn);
+  font-weight: 600;
+}
+
+.table__empty {
+  color: var(--text-muted);
+  padding: 3rem 1rem;
+  text-align: center;
+}
+
+.chip {
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  display: inline-block;
+  font-size: 0.75rem;
+  padding: 0.15rem 0.6rem;
+}

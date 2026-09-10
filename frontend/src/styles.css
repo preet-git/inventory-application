@@ -1,0 +1,137 @@
+/*
+ * The whole design system: a small set of tokens, plus the handful of elements that appear on
+ * more than one component. Component styles cover only what is theirs.
+ */
+
+:root {
+  --surface: #ffffff;
+  --surface-muted: #f6f7f9;
+  --page: #f1f3f6;
+  --border: #dfe3e8;
+  --border-subtle: #eceef1;
+  --text: #16202c;
+  --text-muted: #64748b;
+  --accent: #2563eb;
+  --accent-strong: #1d4ed8;
+  --accent-soft: #eff4ff;
+  --warn: #b45309;
+  --warn-soft: #fef3c7;
+  --danger: #b91c1c;
+  --danger-soft: #fee2e2;
+  --success: #15803d;
+  --success-soft: #dcfce7;
+
+  --radius: 8px;
+  --radius-lg: 12px;
+  --shadow-sm: 0 1px 2px rgb(15 23 42 / 6%);
+  --shadow-lg: 0 20px 45px rgb(15 23 42 / 22%);
+  --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--page);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Buttons: one look, three weights. */
+.button {
+  background: var(--accent);
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  padding: 0.45rem 0.95rem;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+
+.button:hover:not(:disabled) {
+  background: var(--accent-strong);
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.button--large {
+  font-size: 0.9375rem;
+  padding: 0.6rem 1.25rem;
+}
+
+.button--secondary {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.button--secondary:hover:not(:disabled) {
+  background: var(--surface-muted);
+}
+
+.button--ghost {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--text);
+  font-size: 0.8125rem;
+  padding: 0.3rem 0.7rem;
+}
+
+.button--ghost:hover:not(:disabled) {
+  background: var(--surface-muted);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Banners: the same shape whether the news is good or bad. */
+.alert {
+  align-items: center;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  display: flex;
+  font-size: 0.875rem;
+  gap: 0.75rem;
+  justify-content: space-between;
+  margin: 0 0 1rem;
+  padding: 0.7rem 0.95rem;
+}
+
+.alert--error {
+  background: var(--danger-soft);
+  border-color: #fca5a5;
+  color: var(--danger);
+}
+
+.alert--success {
+  background: var(--success-soft);
+  border-color: #86efac;
+  color: var(--success);
+}
+
+.visually-hidden {
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}

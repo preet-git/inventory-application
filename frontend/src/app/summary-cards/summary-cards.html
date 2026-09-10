@@ -1,0 +1,21 @@
+<section class="summary" aria-label="Inventory summary">
+  <article class="card" [class.card--loading]="loading()">
+    <h2 class="card__label">Total products</h2>
+    <p class="card__value">{{ totalProducts() | number }}</p>
+    <p class="card__hint">Rows stored across every import</p>
+  </article>
+
+  <article class="card" [class.card--loading]="loading()">
+    <h2 class="card__label">Total inventory value</h2>
+    <p class="card__value">{{ totalValue() | number: '1.2-2' }}</p>
+    <p class="card__hint">Unit price &times; quantity, summed</p>
+  </article>
+
+  <article class="card" [class.card--loading]="loading()">
+    <h2 class="card__label">Average stock age</h2>
+    <p class="card__value">
+      {{ averageAge() | number: '1.0-1' }} <span class="card__unit">days</span>
+    </p>
+    <p class="card__hint">Days since purchase, averaged</p>
+  </article>
+</section>

@@ -1,0 +1,55 @@
+<div class="table-wrap" [class.table-wrap--loading]="loading()">
+  <table class="table">
+    <caption class="visually-hidden">Imported product inventory</caption>
+    <thead>
+      <tr>
+        @for (column of columns; track column.key) {
+          <th
+            scope="col"
+            [class.table__cell--numeric]="column.numeric"
+            [attr.aria-sort]="ariaSort(column.key)"
+          >
+            <button type="button" class="sort" (click)="sortChange.emit(column.key)">
+              <span>{{ column.label }}</span>
+              <span class="sort__arrow" aria-hidden="true">
+                @if (sortBy() === column.key) {
+                  {{ direction() === 'ASC' ? '▲' : '▼' }}
+                } @else {
+                  ↕
+                }
+              </span>
+            </button>
+          </th>
+        }
+      </tr>
+    </thead>
+
+    <tbody>
+      @for (row of rows(); track row.rowNumber + '|' + row.productSku + '|' + row.purchaseDate) {
+        <tr>
+          <td class="table__cell--numeric table__cell--muted">{{ row.rowNumber }}</td>
+          <td class="table__cell--sku">{{ row.productSku }}</td>
+          <td>{{ row.productName }}</td>
+          <td><span class="chip">{{ row.category }}</span></td>
+          <td>{{ row.purchaseDate | isoDate }}</td>
+          <td class="table__cell--numeric">{{ row.unitPrice | number: '1.2-2' }}</td>
+          <td class="table__cell--numeric">{{ row.quantity | number }}</td>
+          <td class="table__cell--numeric">{{ row.lineValue | number: '1.2-2' }}</td>
+          <td class="table__cell--numeric" [class.table__cell--warn]="isFutureDated(row)">
+            {{ row.stockAgeDays | number }}
+          </td>
+        </tr>
+      } @empty {
+        <tr>
+          <td [attr.colspan]="columns.length" class="table__empty">
+            @if (loading()) {
+              Loading products…
+            } @else {
+              Nothing imported yet. Use <strong>Import Data</strong> to upload a spreadsheet.
+            }
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

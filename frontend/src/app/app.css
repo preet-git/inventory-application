@@ -1,0 +1,33 @@
+.shell {
+  min-height: 100vh;
+}
+
+.shell__bar {
+  align-items: center;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  height: 3.25rem;
+  padding: 0 1.5rem;
+}
+
+.shell__brand {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.shell__brand::before {
+  background: var(--accent);
+  border-radius: 4px;
+  content: '';
+  display: inline-block;
+  height: 0.75rem;
+  margin-right: 0.5rem;
+  width: 0.75rem;
+}
+
+.shell__main {
+  margin: 0 auto;
+  max-width: 80rem;
+  padding: 1.75rem 1.5rem 3rem;
+}

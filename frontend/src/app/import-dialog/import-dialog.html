@@ -1,0 +1,134 @@
+<div class="backdrop" (click)="close()">
+  <div
+    class="dialog"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="import-title"
+    (click)="$event.stopPropagation()"
+    (keydown.escape)="close()"
+  >
+    <header class="dialog__head">
+      <h2 id="import-title">Import data</h2>
+      <button type="button" class="icon-button" aria-label="Close" [disabled]="busy()" (click)="close()">
+        &times;
+      </button>
+    </header>
+
+    <div class="dialog__body">
+      @if (error(); as message) {
+        <p class="alert alert--error" role="alert">{{ message }}</p>
+      }
+
+      @switch (phase()) {
+        @case ('choose') {
+          <div
+            class="dropzone"
+            [class.dropzone--active]="dragging()"
+            (dragover)="onDragOver($event)"
+            (dragleave)="onDragLeave()"
+            (drop)="onDrop($event)"
+          >
+            <p class="dropzone__title">Drop a spreadsheet here</p>
+            <p class="dropzone__hint">.xlsx, .xls or .csv &mdash; columns: Product SKU, Product Name, Category, Purchase Date, Unit Price, Quantity</p>
+            <label class="button button--secondary">
+              Choose file
+              <input type="file" class="visually-hidden" [accept]="accept" (change)="onFileSelected($event)" />
+            </label>
+          </div>
+
+          @if (file(); as chosen) {
+            <p class="file-line">
+              <span class="file-line__name">{{ chosen.name }}</span>
+              <span class="file-line__size">{{ chosen.size / 1024 | number: '1.0-0' }} KB</span>
+            </p>
+          }
+        }
+
+        @case ('uploading') {
+          <div class="progress">
+            <p class="progress__title">Uploading {{ file()?.name }}…</p>
+            <div class="bar"><div class="bar__fill bar__fill--indeterminate"></div></div>
+          </div>
+        }
+
+        @case ('running') {
+          <div class="progress">
+            <p class="progress__title">Importing {{ result()?.fileName }}…</p>
+            <div class="bar"><div class="bar__fill bar__fill--indeterminate"></div></div>
+            <dl class="counters">
+              <div><dt>Rows read</dt><dd>{{ result()?.summary?.rowsRead | number }}</dd></div>
+              <div><dt>Imported</dt><dd>{{ result()?.summary?.importedCount | number }}</dd></div>
+              <div><dt>Rejected</dt><dd>{{ result()?.summary?.rejectedCount | number }}</dd></div>
+            </dl>
+            <p class="progress__hint">
+              The import runs on the server. Closing this dialog is safe once it finishes.
+            </p>
+          </div>
+        }
+
+        @case ('done') {
+          @if (result(); as run) {
+            <p class="alert" [class.alert--error]="failed()" [class.alert--success]="!failed()" role="status">
+              @if (run.status === 'FAILED') {
+                Import failed. {{ run.summary.failureMessage }}
+              } @else if (run.summary.importedCount === 0) {
+                No rows were imported from {{ run.fileName }}.
+              } @else {
+                Imported {{ run.summary.importedCount | number }} of
+                {{ run.summary.rowsRead | number }} rows from {{ run.fileName }}.
+              }
+            </p>
+
+            <dl class="counters">
+              <div><dt>Rows read</dt><dd>{{ run.summary.rowsRead | number }}</dd></div>
+              <div><dt>Imported</dt><dd>{{ run.summary.importedCount | number }}</dd></div>
+              <div><dt>Rejected</dt><dd>{{ run.summary.rejectedCount | number }}</dd></div>
+            </dl>
+
+            @if (run.rejectedRows.count > 0) {
+              <section class="rejections">
+                <h3 class="rejections__title">
+                  {{ run.rejectedRows.count | number }} rejected
+                  {{ run.rejectedRows.count === 1 ? 'row' : 'rows' }}
+                </h3>
+                <p class="rejections__hint">
+                  Rows failing validation, holding an unevaluated formula, or duplicating a
+                  SKU and purchase date already imported. Row numbers are as they appear in the file.
+                </p>
+                <ul class="rejections__list">
+                  @for (rowNumber of rejectedRowNumbers(); track rowNumber) {
+                    <li class="rejections__row">{{ rowNumber }}</li>
+                  }
+                </ul>
+                @if (hasMoreRejections()) {
+                  <button
+                    type="button"
+                    class="button button--ghost"
+                    [disabled]="loadingRejections()"
+                    (click)="showMoreRejections()"
+                  >
+                    {{ loadingRejections() ? 'Loading…' : 'Show more row numbers' }}
+                  </button>
+                }
+              </section>
+            }
+          }
+        }
+      }
+    </div>
+
+    <footer class="dialog__foot">
+      @if (phase() === 'done') {
+        <button type="button" class="button button--secondary" (click)="reset()">Import another</button>
+        <button type="button" class="button" (click)="close()">Done</button>
+      } @else {
+        <button type="button" class="button button--secondary" [disabled]="busy()" (click)="close()">
+          Cancel
+        </button>
+        <button type="button" class="button" [disabled]="!file() || busy()" (click)="upload()">
+          {{ busy() ? 'Working…' : 'Upload' }}
+        </button>
+      }
+    </footer>
+  </div>
+</div>

@@ -1,0 +1,45 @@
+spring:
+  application:
+    name: inventory-import
+
+  threads:
+    virtual:
+      # Serve every HTTP request on a virtual thread. An import occupies its request thread for
+      # the whole file, so this keeps a long upload from consuming one of a small pool of
+      # platform threads while the read endpoints stay responsive.
+      enabled: true
+
+  servlet:
+    multipart:
+      enabled: true
+      # Spring's DataSize parses MB as binary (1024 * 1024), so 15MB is exactly 15 MiB.
+      # First line of defence: the container rejects the upload before any of our code runs.
+      max-file-size: 15MB
+      # Room for the file plus the dateFormat part and multipart framing overhead.
+      max-request-size: 16MB
+      # 0B means every uploaded part is streamed to a temp file rather than buffered in the
+      # heap, which matters when POI later needs headroom for formula evaluation.
+      file-size-threshold: 0B
+
+server:
+  port: 8080
+  tomcat:
+    # When Tomcat rejects an oversized upload it must still drain the remaining request body,
+    # or the client gets a connection reset instead of our 400 response. The default is 2MB;
+    # 20MB covers a slightly-too-large file while still cutting off a genuinely abusive one.
+    max-swallow-size: 20MB
+
+ablsoft:
+  import:
+    # Maximum data rows, excluding the header. Enforced while reading, not after.
+    max-data-rows: 50000
+    # Service-level size guard, mirroring the multipart limit above.
+    max-upload-size: 15MB
+    # Used when the upload request omits the dateFormat parameter.
+    default-date-format: MM/dd/yyyy
+    # Threads for CPU-bound row validation. 0 means derive from available processors.
+    validation-workers: 0
+
+logging:
+  level:
+    com.ablsoft.inventory: INFO
