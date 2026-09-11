@@ -65,8 +65,7 @@ services:
     # sheet under about 10 MB. 2g covers that comfortably -- treat it as a floor, not a target.
     mem_limit: 2g
     depends_on:
-      backend:
-        # Holds the dashboard back until the API answers, so the first page load never errors.
+      db:
         condition: service_healthy
     restart: unless-stopped
     networks:
