@@ -1,0 +1,102 @@
+# The whole application: PostgreSQL, the import API, and the dashboard that drives it.
+#
+#   docker compose up --build       then open http://localhost:8081
+#
+# The dashboard is static files served by nginx on :8081. The browser loads it from there and then
+# calls the API directly at http://localhost:8080/api (that address is built into the frontend).
+# So the API must stay published on host port 8080, and its CORS list must include the address the
+# dashboard is opened from.
+
+name: inventory-application
+
+services:
+  db:
+    image: postgres:18-alpine
+    container_name: inventory-db
+    environment:
+      POSTGRES_DB: ${DB_NAME:-inventory}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    volumes:
+      # postgres:18 moved PGDATA to /var/lib/postgresql/18/docker and declares the VOLUME one level
+      # up, at /var/lib/postgresql. Mounting the old /var/lib/postgresql/data would still start --
+      # and would silently persist nothing, because the real data directory is not underneath it.
+      - db-data:/var/lib/postgresql
+    ports:
+      # Not 5432, because a developer running the backend outside compose almost certainly has
+      # Postgres on that port already and the bind would fail.
+      - "${DB_PUBLISHED_PORT:-5433}:5432"
+    healthcheck:
+      # The backend runs Flyway before it opens its port, so it must not start against a Postgres
+      # that is still initialising. pg_isready needs the user, or it looks for a role named "root".
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-inventory}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - inventory
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: inventory-backend:latest
+    container_name: inventory-api
+    environment:
+      # Container-aware heap sizing; the limit below is what it is a percentage of.
+      JAVA_OPTS: "-XX:MaxRAMPercentage=75 -XX:+ExitOnOutOfMemoryError"
+      # A compose service name, resolved inside the network -- not localhost, which inside this
+      # container is the container itself.
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-inventory}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      # Required: the dashboard (:8081) calls the API (:8080) from the browser, which is a
+      # cross-origin request. :4200 is the Angular dev server.
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:8081,http://127.0.0.1:8081,http://localhost:4200}
+    ports:
+      # Fixed at 8080 on the host: the dashboard has http://localhost:8080/api built in.
+      - "8080:8080"
+    # .csv and .xlsx are read as a stream, so file size barely affects memory. .xls is loaded whole
+    # so its formulas can be evaluated; the format caps at 65,536 rows, which keeps a six-column
+    # sheet under about 10 MB. 1g covers that comfortably -- treat it as a floor, not a target.
+    mem_limit: 2g
+    depends_on:
+      db:
+        # ddl-auto is validate and Flyway owns the schema, so the app exits rather than waiting if
+        # the database is not there when it boots.
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - inventory
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: inventory-frontend:latest
+    container_name: inventory-dashboard
+    environment:
+      # Relative, so the browser calls the nginx that served the page and nginx forwards it on.
+      API_BASE_URL: ${API_BASE_URL:-/api}
+      # Where nginx forwards it to. A compose service name, resolved inside the network.
+      API_UPSTREAM: ${API_UPSTREAM:-http://backend:8080}
+    ports:
+      - "${DASHBOARD_PUBLISHED_PORT:-8081}:80"
+    depends_on:
+      backend:
+        # Holds the dashboard back until the API answers, so the first page load never errors.
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - inventory
+
+volumes:
+  db-data:
+
+networks:
+  inventory:
+    driver: bridge

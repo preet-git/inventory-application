@@ -1,0 +1,141 @@
+{
+  "info": {
+    "name": "Inventory Import API",
+    "description": "Upload a product file (.csv, .xls, .xlsx), poll the import until it finishes, and page through the imported rows. Dates are detected automatically, so there is no date format to choose.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "importId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "cursor",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Submit product file",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": []
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/imports",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "imports"]
+        },
+        "description": "Uploads a .csv, .xls or .xlsx file and queues it. Returns 202 with an importId; the rows are read on a worker thread, so poll 'Get import status' for progress. A file whose contents do not match its extension, or that has no recognisable header row, is refused here with 400."
+      },
+      "response": []
+    },
+    {
+      "name": "Get import status",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/imports/{{importId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "imports", "{{importId}}"]
+        },
+        "description": "Status is PENDING, RUNNING, COMPLETED or FAILED. The counters climb while it runs, because each chunk of rows is committed as it is read. On FAILED, summary.failureMessage says why."
+      },
+      "response": []
+    },
+    {
+      "name": "Get rejected row numbers",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/imports/{{importId}}/rejections?page=0&size=100",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "imports", "{{importId}}", "rejections"],
+          "query": [
+            {
+              "key": "page",
+              "value": "0",
+              "description": "Zero-based page index."
+            },
+            {
+              "key": "size",
+              "value": "100",
+              "description": "Row numbers per page."
+            }
+          ]
+        },
+        "description": "Every source row number this import rejected, for an import that rejected more than the handful echoed in the status response."
+      },
+      "response": []
+    },
+    {
+      "name": "Get inventory summary",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/products/summary",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "products", "summary"]
+        },
+        "description": "Totals for the dashboard card, over the whole inventory rather than one import: totalProducts, totalInventoryValue and averageStockAgeDays."
+      },
+      "response": []
+    },
+    {
+      "name": "Get products",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/products?size=20&sortBy=productSku&direction=ASC",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "products"],
+          "query": [
+            {
+              "key": "size",
+              "value": "20",
+              "description": "Rows per page."
+            },
+            {
+              "key": "sortBy",
+              "value": "productSku",
+              "description": "One of: rowNumber, productSku, productName, category, purchaseDate, unitPrice, quantity, lineValue, stockAgeDays."
+            },
+            {
+              "key": "direction",
+              "value": "ASC",
+              "description": "ASC or DESC."
+            },
+            {
+              "key": "cursor",
+              "value": "{{cursor}}",
+              "description": "Cursor-paged, not offset-paged: pass the previous response's nextCursor here. Leave empty for the first page. Changing sortBy or direction invalidates a cursor, so start a fresh walk when the sort changes.",
+              "disabled": true
+            }
+          ]
+        },
+        "description": "A page of imported rows for the dashboard table, including the derived lineValue and stockAgeDays columns. Follow nextCursor until hasMore is false."
+      },
+      "response": []
+    }
+  ]
+}

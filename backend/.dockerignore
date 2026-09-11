@@ -1,0 +1,26 @@
+# The build context is uploaded to the daemon before the first instruction runs, so anything the
+# Dockerfile does not COPY is pure cost. target/ alone is ~150 MB once the boot jar is repackaged.
+target/
+!target/.gitkeep
+
+# Rebuilt inside the image; a host copy would only shadow it.
+.mvn/wrapper/*.jar
+
+# Nothing here affects the build, and each of these changes often enough to invalidate the context
+# cache for no reason.
+.git/
+.gitignore
+.gitattributes
+.idea/
+*.iml
+.vscode/
+Dockerfile
+.dockerignore
+docker-compose.yml
+README.md
+postman/
+
+# Local overrides. These carry developer-specific credentials and must not be baked into an image.
+.env
+*.env
+src/main/resources/application-local.yml
