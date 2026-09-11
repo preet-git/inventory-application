@@ -9,15 +9,10 @@
         <module name="backend" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel>
-      <module name="inventory-application" target="1.5" />
-      <module name="inventory-import" target="25" />
-    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="backend" options="-parameters -Xlint:all" />
-      <module name="inventory-import" options="-parameters -Xlint:all" />
     </option>
   </component>
 </project>

@@ -20,12 +20,6 @@ export const PAGE_SIZES = [10, 20, 50, 100] as const;
 export class ProductsStore {
   private readonly api = inject(InventoryApi);
 
-  /**
-   * Guards against a slow response overwriting a fast one that was asked for later. Every load
-   * takes a ticket; only the newest ticket is allowed to write to the signals.
-   */
-  private requestId = 0;
-
   /** The cursor that opened each page visited so far. The first page has none, hence null. */
   private readonly cursors = signal<(string | null)[]>([null]);
 
@@ -116,7 +110,6 @@ export class ProductsStore {
   }
 
   private load(cursor: string | null): void {
-    const ticket = ++this.requestId;
     this.loading.set(true);
     this.error.set(null);
     this.api
@@ -128,17 +121,11 @@ export class ProductsStore {
       })
       .subscribe({
         next: (page) => {
-          if (ticket !== this.requestId) {
-            return;
-          }
           this.rows.set(page.content);
           this.nextCursor.set(page.nextCursor);
           this.loading.set(false);
         },
         error: (error: InventoryApiError) => {
-          if (ticket !== this.requestId) {
-            return;
-          }
           this.rows.set([]);
           this.nextCursor.set(null);
           this.error.set(error.message);

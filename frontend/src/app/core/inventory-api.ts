@@ -1,7 +1,7 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { catchError, Observable, throwError } from 'rxjs';
-import { API_BASE_URL } from './api-base-url';
+import { API_URL } from './api-url';
 import type {
   ApiError,
   ImportResult,
@@ -32,12 +32,11 @@ export class InventoryApiError extends Error {
 @Injectable({ providedIn: 'root' })
 export class InventoryApi {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = inject(API_BASE_URL);
 
   /** The whole inventory, for the summary card. */
   summary(): Observable<InventorySummary> {
     return this.http
-      .get<InventorySummary>(`${this.baseUrl}/products/summary`)
+      .get<InventorySummary>(`${API_URL}/products/summary`)
       .pipe(catchError(toApiError));
   }
 
@@ -63,7 +62,7 @@ export class InventoryApi {
       params['cursor'] = options.cursor;
     }
     return this.http
-      .get<ProductPage>(`${this.baseUrl}/products`, { params })
+      .get<ProductPage>(`${API_URL}/products`, { params })
       .pipe(catchError(toApiError));
   }
 
@@ -75,23 +74,14 @@ export class InventoryApi {
     const body = new FormData();
     body.append('file', file, file.name);
     return this.http
-      .post<ImportResult>(`${this.baseUrl}/imports`, body)
+      .post<ImportResult>(`${API_URL}/imports`, body)
       .pipe(catchError(toApiError));
   }
 
   /** Where an import has got to. The counters climb between calls while it runs. */
   importStatus(importId: number): Observable<ImportResult> {
     return this.http
-      .get<ImportResult>(`${this.baseUrl}/imports/${importId}`)
-      .pipe(catchError(toApiError));
-  }
-
-  /** Rejected row numbers beyond the first page inlined in the status response. */
-  rejections(importId: number, page: number, size: number): Observable<number[]> {
-    return this.http
-      .get<number[]>(`${this.baseUrl}/imports/${importId}/rejections`, {
-        params: { page: String(page), size: String(size) },
-      })
+      .get<ImportResult>(`${API_URL}/imports/${importId}`)
       .pipe(catchError(toApiError));
   }
 }

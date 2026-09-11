@@ -1,0 +1,90 @@
+<div class="side">
+  <!-- Part one: what is in the inventory, and what the last run put there. -->
+  <section class="panel card" aria-labelledby="imported-title">
+    <header class="card__head card__head--ok">
+      <h2 class="card__title" id="imported-title">Successfully imported</h2>
+    </header>
+
+    <div class="card__body" [class.card__body--loading]="loading()">
+      <p class="hero">
+        <span class="hero__value">{{ totalProducts() | number }}</span>
+        <span class="hero__label">products stored</span>
+      </p>
+
+      <dl class="stats">
+        <div class="stat">
+          <dt>Total inventory value</dt>
+          <dd>{{ totalValue() | number: '1.2-2' }}</dd>
+        </div>
+        <div class="stat">
+          <dt>Average stock age</dt>
+          <dd>{{ averageAge() | number: '1.0-1' }} <span class="stat__unit">days</span></dd>
+        </div>
+      </dl>
+
+      @if (lastImport(); as run) {
+        <div class="run">
+          <p class="run__file" [title]="run.fileName">{{ run.fileName }}</p>
+          <p class="run__line">
+            <strong class="run__count">{{ run.summary.importedCount | number }}</strong>
+            of {{ run.summary.rowsRead | number }} rows imported
+            @if (run.summary.finishedAt; as finishedAt) {
+              <span class="run__when">&middot; {{ finishedAt | date: 'd MMM, HH:mm' }}</span>
+            }
+          </p>
+        </div>
+      } @else {
+        <p class="empty">No import yet. Use <strong>Import Data</strong> to upload a file.</p>
+      }
+    </div>
+  </section>
+
+  <!-- Part two: the rows the last run turned away. -->
+  <section class="panel card" aria-labelledby="rejected-title">
+    <header class="card__head card__head--bad">
+      <h2 class="card__title" id="rejected-title">Rejected rows</h2>
+      @if (lastImport(); as run) {
+        <span class="badge">{{ run.rejectedRows.count | number }}</span>
+      }
+    </header>
+
+    <div class="card__body">
+      @if (lastImport(); as run) {
+        @if (runFailed()) {
+          <p class="alert alert--error" role="status">
+            Import failed. {{ run.summary.failureMessage }}
+          </p>
+        }
+
+        @if (run.rejectedRows.count === 0) {
+          <p class="clean">
+            @if (runFailed()) {
+              Nothing was read from this file, so no individual rows were rejected.
+            } @else {
+              Every row in {{ run.fileName }} passed validation.
+            }
+          </p>
+        } @else {
+          <p class="hint">
+            Rows failing validation, holding an unevaluated formula, or repeating a SKU and
+            purchase date already imported. Numbered as they appear in the file.
+          </p>
+
+          <ul class="rows">
+            @for (rowNumber of run.rejectedRows.rowNumbers; track rowNumber) {
+              <li class="rows__row">{{ rowNumber }}</li>
+            }
+          </ul>
+
+          @if (run.rejectedRows.truncated) {
+            <p class="hint">
+              Showing the first {{ run.rejectedRows.rowNumbers.length | number }}.
+            </p>
+          }
+        }
+      } @else {
+        <p class="empty">Rejected rows from your next import will be listed here.</p>
+      }
+    </div>
+  </section>
+</div>

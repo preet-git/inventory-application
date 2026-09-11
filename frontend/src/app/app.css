@@ -2,32 +2,47 @@
   min-height: 100vh;
 }
 
+/* Navy bar with the teal mark: ABLSoft's two brand colours doing the identifying, so the app is
+   recognisably theirs before any content loads. */
 .shell__bar {
   align-items: center;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
+  background: var(--navy);
+  color: #fff;
   display: flex;
   height: 3.25rem;
   padding: 0 1.5rem;
 }
 
 .shell__brand {
+  align-items: center;
+  display: flex;
+  font-family: var(--font-display);
+  font-size: 1rem;
   font-weight: 700;
-  letter-spacing: -0.01em;
+  gap: 0.55rem;
+  letter-spacing: 0.01em;
 }
 
-.shell__brand::before {
-  background: var(--accent);
-  border-radius: 4px;
-  content: '';
+.shell__mark {
+  background: var(--brand);
+  border-radius: 3px;
   display: inline-block;
-  height: 0.75rem;
-  margin-right: 0.5rem;
-  width: 0.75rem;
+  height: 0.85rem;
+  width: 0.85rem;
+}
+
+.shell__sub {
+  color: rgb(255 255 255 / 62%);
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  font-weight: 400;
+  letter-spacing: 0;
 }
 
 .shell__main {
   margin: 0 auto;
-  max-width: 80rem;
+  /* Wider than the single-column layout needed: the table now shares the row with the summary
+     panel, so it wants every pixel it can get before it starts scrolling sideways. */
+  max-width: 92rem;
   padding: 1.75rem 1.5rem 3rem;
 }

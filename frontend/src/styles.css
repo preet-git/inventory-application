@@ -1,30 +1,55 @@
 /*
  * The whole design system: a small set of tokens, plus the handful of elements that appear on
  * more than one component. Component styles cover only what is theirs.
+ *
+ * The palette is ABLSoft's own, taken from their site's global tokens: teal #00BACB as primary,
+ * navy #263744 as secondary and body text, green #29C229 as the accent. Two of those are used
+ * semantically here -- green marks what was imported, and a red drawn from the same family as
+ * their coral brand element marks what was rejected -- so the two halves of the summary panel
+ * read apart at a glance without leaving the brand.
  */
 
 :root {
+  /* Brand */
+  --brand: #00bacb;
+  --brand-strong: #0097a8;
+  --brand-tint: #ceeff3;
+  --brand-soft: #e9f9fb;
+  --navy: #263744;
+  --navy-strong: #1b2731;
+
+  /* Surfaces and text */
   --surface: #ffffff;
-  --surface-muted: #f6f7f9;
-  --page: #f1f3f6;
-  --border: #dfe3e8;
-  --border-subtle: #eceef1;
-  --text: #16202c;
-  --text-muted: #64748b;
-  --accent: #2563eb;
-  --accent-strong: #1d4ed8;
-  --accent-soft: #eff4ff;
-  --warn: #b45309;
-  --warn-soft: #fef3c7;
-  --danger: #b91c1c;
-  --danger-soft: #fee2e2;
-  --success: #15803d;
-  --success-soft: #dcfce7;
+  --surface-muted: #f4f7f9;
+  --page: #eef3f6;
+  --border: #d8e1e9;
+  --border-subtle: #e8eef3;
+  --text: #263744;
+  --text-muted: #64798b;
+
+  /* Status. Green is ABLSoft's accent, darkened to the weight text needs; red is their coral
+     brand element at the same hue, likewise darkened. */
+  --success: #1d871d;
+  --success-bright: #29c229;
+  --success-soft: #e7f9e7;
+  --danger: #b42d31;
+  --danger-bright: #dd3c41;
+  --danger-soft: #ffe5e6;
+  --warn: #9a5b22;
+  --warn-soft: #fff1e3;
+
+  /* Aliases: components speak in roles, so the brand can move without touching them. */
+  --accent: var(--brand);
+  --accent-strong: var(--brand-strong);
+  --accent-soft: var(--brand-soft);
 
   --radius: 8px;
   --radius-lg: 12px;
-  --shadow-sm: 0 1px 2px rgb(15 23 42 / 6%);
-  --shadow-lg: 0 20px 45px rgb(15 23 42 / 22%);
+  --shadow-sm: 0 1px 2px rgb(38 55 68 / 6%);
+  --shadow-lg: 0 20px 45px rgb(27 39 49 / 25%);
+
+  --font-sans: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  --font-display: 'Roboto Slab', Georgia, 'Times New Roman', serif;
   --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, monospace;
 }
 
@@ -41,10 +66,20 @@ body {
 body {
   background: var(--page);
   color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-family: var(--font-sans);
   font-size: 15px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Roboto Slab carries headings, as it does on ablsoft.com. Figures stay in Roboto, which has the
+   tabular numerals a column of numbers needs to line up. */
+h1,
+h2,
+h3,
+.display {
+  font-family: var(--font-display);
+  font-weight: 600;
 }
 
 /* Buttons: one look, three weights. */
@@ -97,7 +132,7 @@ body {
 }
 
 :focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--brand);
   outline-offset: 2px;
 }
 
@@ -116,14 +151,22 @@ body {
 
 .alert--error {
   background: var(--danger-soft);
-  border-color: #fca5a5;
+  border-color: #f3b4b6;
   color: var(--danger);
 }
 
 .alert--success {
   background: var(--success-soft);
-  border-color: #86efac;
+  border-color: #a8e6a8;
   color: var(--success);
+}
+
+/* A panel: the boxes the page is built from. */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
 }
 
 .visually-hidden {

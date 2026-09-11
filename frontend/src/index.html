@@ -5,12 +5,15 @@
   <title>Product Inventory</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#263744">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
-  <!--
-    Runtime configuration, loaded before the bundle. The frontend container rewrites this file on
-    boot from API_BASE_URL, so one built image serves every environment.
-  -->
-  <script src="env.js"></script>
+  <!-- ABLSoft's own faces. Every rule names a system fallback too, so the page is unharmed when
+       Google Fonts cannot be reached. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Slab:wght@500;600;700&display=swap"
+    rel="stylesheet">
 </head>
 <body>
   <app-root></app-root>

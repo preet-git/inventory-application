@@ -15,62 +15,68 @@
   </p>
 }
 
-<app-summary-cards [summary]="store.summary()" [loading]="store.loading()" />
+<div class="layout">
+  <section class="panel table-section" aria-label="Products">
+    <div class="toolbar">
+      <span class="toolbar__title">Products</span>
+      <span class="toolbar__spacer"></span>
 
-<section class="table-section" aria-label="Products">
-  <div class="toolbar">
-    <span class="toolbar__title">Products</span>
-    <span class="toolbar__spacer"></span>
+      <label class="toolbar__field">
+        Rows per page
+        <!-- Selected is marked on the option rather than bound on the select: the select is created
+             before @for has added any options, so a value bound there has nothing to match yet. -->
+        <select (change)="onPageSize($event)">
+          @for (size of pageSizes; track size) {
+            <option [value]="size" [selected]="size === store.pageSize()">{{ size }}</option>
+          }
+        </select>
+      </label>
 
-    <label class="toolbar__field">
-      Rows per page
-      <!-- Selected is marked on the option rather than bound on the select: the select is created
-           before @for has added any options, so a value bound there has nothing to match yet. -->
-      <select (change)="onPageSize($event)">
-        @for (size of pageSizes; track size) {
-          <option [value]="size" [selected]="size === store.pageSize()">{{ size }}</option>
-        }
-      </select>
-    </label>
+      <span class="toolbar__range">{{ store.rangeLabel() }}</span>
 
-    <span class="toolbar__range">{{ store.rangeLabel() }}</span>
-
-    <div class="toolbar__pager">
-      <button
-        type="button"
-        class="button button--ghost"
-        aria-label="Previous page"
-        [disabled]="!store.hasPrevious() || store.loading()"
-        (click)="store.previous()"
-      >
-        &lsaquo; Prev
-      </button>
-      <button
-        type="button"
-        class="button button--ghost"
-        aria-label="Next page"
-        [disabled]="!store.hasNext() || store.loading()"
-        (click)="store.next()"
-      >
-        Next &rsaquo;
-      </button>
+      <div class="toolbar__pager">
+        <button
+          type="button"
+          class="button button--ghost"
+          aria-label="Previous page"
+          [disabled]="!store.hasPrevious() || store.loading()"
+          (click)="store.previous()"
+        >
+          &lsaquo; Prev
+        </button>
+        <button
+          type="button"
+          class="button button--ghost"
+          aria-label="Next page"
+          [disabled]="!store.hasNext() || store.loading()"
+          (click)="store.next()"
+        >
+          Next &rsaquo;
+        </button>
+      </div>
     </div>
-  </div>
 
-  <app-products-table
-    [rows]="store.rows()"
-    [sortBy]="store.sortBy()"
-    [direction]="store.direction()"
+    <app-products-table
+      [rows]="store.rows()"
+      [sortBy]="store.sortBy()"
+      [direction]="store.direction()"
+      [loading]="store.loading()"
+      (sortChange)="onSort($event)"
+    />
+
+    <p class="table-note">
+      Pages are walked in order: the API pages by cursor, so Prev and Next move one page at a time
+      rather than jumping to a numbered page.
+    </p>
+  </section>
+
+  <app-summary-panel
+    [summary]="store.summary()"
+    [lastImport]="lastImport()"
     [loading]="store.loading()"
-    (sortChange)="onSort($event)"
   />
-
-  <p class="table-note">
-    Pages are walked in order: the API pages by cursor, so Prev and Next move one page at a time
-    rather than jumping to a numbered page.
-  </p>
-</section>
+</div>
 
 @if (importOpen()) {
-  <app-import-dialog (finished)="onImportFinished()" (closed)="importOpen.set(false)" />
+  <app-import-dialog (finished)="onImportFinished($event)" (closed)="importOpen.set(false)" />
 }

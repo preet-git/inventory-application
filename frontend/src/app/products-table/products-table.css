@@ -12,7 +12,10 @@
 .table {
   border-collapse: collapse;
   font-size: 0.875rem;
-  min-width: 60rem;
+  /* Sized to fit inside the 70% column at a normal desktop width, so the last column -- stock age,
+     the one the brief is really about -- is not the one pushed off the edge. Narrower than this
+     and it still scrolls, which is why the wrapper keeps its overflow. */
+  min-width: 50rem;
   width: 100%;
 }
 
@@ -35,7 +38,7 @@
   font: inherit;
   font-weight: 600;
   gap: 0.4rem;
-  padding: 0.7rem 0.85rem;
+  padding: 0.7rem 0.6rem;
   width: 100%;
 }
 
@@ -44,7 +47,7 @@
 }
 
 .sort__arrow {
-  color: var(--accent);
+  color: var(--brand);
   font-size: 0.7rem;
 }
 
@@ -54,11 +57,11 @@
 
 .table td {
   border-bottom: 1px solid var(--border-subtle);
-  padding: 0.65rem 0.85rem;
+  padding: 0.65rem 0.6rem;
 }
 
 .table tbody tr:hover td {
-  background: var(--surface-muted);
+  background: var(--brand-soft);
 }
 
 .table__cell--numeric {
@@ -86,8 +89,8 @@
 }
 
 .chip {
-  background: var(--surface-muted);
-  border: 1px solid var(--border);
+  background: var(--brand-soft);
+  border: 1px solid var(--brand-tint);
   border-radius: 999px;
   display: inline-block;
   font-size: 0.75rem;

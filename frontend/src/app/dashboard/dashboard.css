@@ -18,11 +18,39 @@
   margin: 0.3rem 0 0;
 }
 
+/*
+ * Seventy per cent table, thirty per cent summary.
+ *
+ * The fr units are what make that hold at any width, and the minmax(0, ...) is what stops it
+ * breaking: a grid column's default minimum is its content, so the wide table would otherwise
+ * push the column past its share instead of scrolling inside it.
+ */
+.layout {
+  align-items: start;
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 3fr);
+}
+
+/* Follows the table down a long page rather than scrolling away above it. */
+app-summary-panel {
+  display: block;
+  position: sticky;
+  top: 1rem;
+}
+
+/* Side by side stops being a favour to either half once the table has no room left. */
+@media (max-width: 1100px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  app-summary-panel {
+    position: static;
+  }
+}
+
 .table-section {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
   padding: 1.1rem 1.25rem 1.25rem;
 }
 
@@ -35,8 +63,9 @@
 }
 
 .toolbar__title {
+  font-family: var(--font-display);
   font-size: 1rem;
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .toolbar__spacer {

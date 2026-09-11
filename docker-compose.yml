@@ -62,12 +62,11 @@ services:
       - "8080:8080"
     # .csv and .xlsx are read as a stream, so file size barely affects memory. .xls is loaded whole
     # so its formulas can be evaluated; the format caps at 65,536 rows, which keeps a six-column
-    # sheet under about 10 MB. 1g covers that comfortably -- treat it as a floor, not a target.
+    # sheet under about 10 MB. 2g covers that comfortably -- treat it as a floor, not a target.
     mem_limit: 2g
     depends_on:
-      db:
-        # ddl-auto is validate and Flyway owns the schema, so the app exits rather than waiting if
-        # the database is not there when it boots.
+      backend:
+        # Holds the dashboard back until the API answers, so the first page load never errors.
         condition: service_healthy
     restart: unless-stopped
     networks:

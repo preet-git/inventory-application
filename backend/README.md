@@ -322,7 +322,7 @@ The `Dockerfile` has two stages:
   builds) and packages the jar. The jar is split into layers, so a code-only change rebuilds only a
   small layer.
 - **Run** on `eclipse-temurin:25-jre-alpine`, as a non-root user. The heap is 75% of the container's
-  memory limit (`mem_limit: 2g` in compose). An out-of-memory error exits the container, so the
+  memory limit (`mem_limit: 1g` in compose). An out-of-memory error exits the container, so the
   restart policy can bring it back.
 
 The health check calls `GET /api/products?size=1`, which needs the database too. It allows 60

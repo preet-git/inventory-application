@@ -1,35 +1,35 @@
-   # Build output
-   backend/target/
-   frontend/dist/
-   frontend/out-tsc/
-   frontend/.angular/
-   frontend/coverage/
+# Build output
+backend/target/
+frontend/dist/
+frontend/out-tsc/
+frontend/.angular/
+frontend/coverage/
 
-   # Dependencies
-   frontend/node_modules/
-   backend/.mvn/wrapper/maven-wrapper.jar
+# Dependencies
+frontend/node_modules/
+backend/.mvn/wrapper/maven-wrapper.jar
 
-   # Secrets and local overrides
-   .env
-   .env.*
-   !.env.example
-   backend/src/main/resources/application-local.yml
+# Secrets and local overrides
+.env
+.env.*
+!.env.example
+backend/src/main/resources/application-local.yml
 
-   # IDEs and editors
-   .idea/
-   *.iml
-   *.iws
-   *.ipr
-   .vscode/
-   .classpath
-   .project
-   .settings/
-   .factorypath
-   .apt_generated/
-   .springBeans
-   .sts4-cache/
+# IDEs and editors
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.classpath
+.project
+.settings/
+.factorypath
+.apt_generated/
+.springBeans
+.sts4-cache/
 
-   # Logs and OS files
-   *.log
-   .DS_Store
-   Thumbs.db
+# Logs and OS files
+*.log
+.DS_Store
+Thumbs.db

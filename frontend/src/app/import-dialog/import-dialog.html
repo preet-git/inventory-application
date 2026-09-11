@@ -96,19 +96,14 @@
                   SKU and purchase date already imported. Row numbers are as they appear in the file.
                 </p>
                 <ul class="rejections__list">
-                  @for (rowNumber of rejectedRowNumbers(); track rowNumber) {
+                  @for (rowNumber of run.rejectedRows.rowNumbers; track rowNumber) {
                     <li class="rejections__row">{{ rowNumber }}</li>
                   }
                 </ul>
-                @if (hasMoreRejections()) {
-                  <button
-                    type="button"
-                    class="button button--ghost"
-                    [disabled]="loadingRejections()"
-                    (click)="showMoreRejections()"
-                  >
-                    {{ loadingRejections() ? 'Loading…' : 'Show more row numbers' }}
-                  </button>
+                @if (run.rejectedRows.truncated) {
+                  <p class="rejections__hint">
+                    Showing the first {{ run.rejectedRows.rowNumbers.length | number }}.
+                  </p>
                 }
               </section>
             }
