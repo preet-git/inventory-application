@@ -1,11 +1,7 @@
 package com.ablsoft.inventory.validate;
 
-import com.ablsoft.inventory.model.FileFormat;
 import com.ablsoft.inventory.model.Product;
-import com.ablsoft.inventory.model.RejectedRow;
-import com.ablsoft.inventory.model.RowData;
-import com.ablsoft.inventory.model.RowOutcome;
-import com.ablsoft.inventory.model.SupportedDateFormat;
+import com.ablsoft.inventory.model.RawRow;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -14,88 +10,43 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
-/**
- * Applies the business rules to one parsed row: the "Business Logic Rules" stage of the brief's
- * lifecycle, sitting between formula evaluation and the atomic in-memory commit.
- *
- * <p>Instances are immutable and stateless beyond the two settings fixed for the whole import,
- * so one instance is shared across every validation worker with no synchronisation. Nothing here
- * touches Apache POI, the accepted map or the rejection list; a worker receives an immutable
- * {@link RowData} and returns an immutable {@link RowOutcome}, which is what makes running this
- * in parallel safe.
- *
- * <p>Duplicate detection is deliberately absent. It depends on rows already seen, so it belongs
- * to the single-threaded coordinator; a worker has no consistent view of what came before it.
- *
- * <p>Rules are applied independently and their failures accumulated, so one upload surfaces
- * every problem in a row rather than only the first.
- */
 public final class RowValidator {
 
-    static final String CSV_FORMULA_REASON = "Formula expressions are supported only in Excel files";
-
     private static final int MAX_SKU_LENGTH = 64;
+    private static final int MAX_TEXT_LENGTH = 255;
     private static final String CURRENCY_SYMBOLS = "$£€₹¥";
 
-    private final SupportedDateFormat dateFormat;
-    private final FileFormat sourceFormat;
+    public record Result(Product product, List<String> reasons) {
 
-    public RowValidator(SupportedDateFormat dateFormat, FileFormat sourceFormat) {
-        this.dateFormat = dateFormat;
-        this.sourceFormat = sourceFormat;
+        public boolean accepted() {
+            return product != null;
+        }
     }
 
-    public RowOutcome validate(RowData row) {
-        // A row the reader could not evaluate never had usable cell values, so the formula
-        // failure is the whole story and running the field rules would only add noise.
-        if (row.hasFormulaError()) {
-            return new RowOutcome.Rejected(
-                    RejectedRow.single(row.rowNumber(), row.productSku(), row.formulaError()));
+    public Result validate(RawRow row) {
+        // A row whose formula could not be evaluated never had usable values, so the read failure
+        // is the whole story and the field rules would only add noise.
+        if (row.isUnreadable()) {
+            return new Result(null, List.of(row.readError()));
         }
 
         List<String> reasons = new ArrayList<>();
-
-        if (!sourceFormat.supportsFormulas() && containsFormulaExpression(row)) {
-            reasons.add(CSV_FORMULA_REASON);
-        }
-
         String sku = validateSku(row.productSku(), reasons);
+        String name = requireText(row.productName(), "Product Name", reasons);
+        String category = requireText(row.category(), "Category", reasons);
         LocalDate purchaseDate = validatePurchaseDate(row.purchaseDate(), reasons);
         BigDecimal unitPrice = validateUnitPrice(row.unitPrice(), reasons);
         int quantity = validateQuantity(row.quantity(), reasons);
 
         if (!reasons.isEmpty()) {
-            // The original SKU, untouched, so the reader of the report can find the row.
-            return new RowOutcome.Rejected(
-                    RejectedRow.of(row.rowNumber(), row.productSku(), reasons));
+            return new Result(null, List.copyOf(reasons));
         }
-
-        return new RowOutcome.Accepted(new Product(
-                row.rowNumber(),
-                sku,
-                row.productName().trim(),
-                row.category().trim(),
-                purchaseDate,
-                unitPrice,
-                quantity));
+        return new Result(
+                new Product(row.rowNumber(), sku, name, category, purchaseDate, unitPrice, quantity),
+                List.of());
     }
 
-    /**
-     * Checks only the four required columns. Product Name and Category are free text that may be
-     * blank, so a name legitimately beginning with {@code =} is stored rather than rejected.
-     */
-    private boolean containsFormulaExpression(RowData row) {
-        return startsWithEquals(row.productSku())
-                || startsWithEquals(row.purchaseDate())
-                || startsWithEquals(row.unitPrice())
-                || startsWithEquals(row.quantity());
-    }
-
-    private static boolean startsWithEquals(String value) {
-        return value.trim().startsWith("=");
-    }
-
-    private String validateSku(String raw, List<String> reasons) {
+    private static String validateSku(String raw, List<String> reasons) {
         String sku = raw.trim().toUpperCase(Locale.ROOT);
         if (sku.isEmpty()) {
             reasons.add("Product SKU is required");
@@ -108,56 +59,57 @@ public final class RowValidator {
         return sku;
     }
 
-    private LocalDate validatePurchaseDate(String raw, List<String> reasons) {
+    private static String requireText(String raw, String field, List<String> reasons) {
+        String text = raw.trim();
+        if (text.isEmpty()) {
+            reasons.add(field + " is required");
+            return null;
+        }
+        if (text.length() > MAX_TEXT_LENGTH) {
+            reasons.add(field + " exceeds " + MAX_TEXT_LENGTH + " characters");
+            return null;
+        }
+        return text;
+    }
+
+    private static LocalDate validatePurchaseDate(String raw, List<String> reasons) {
         if (raw.isBlank()) {
             reasons.add("Purchase Date is required");
             return null;
         }
-        Optional<LocalDate> parsed = dateFormat.tryParse(raw);
+        Optional<LocalDate> parsed = DateNormalizer.parse(raw);
         if (parsed.isEmpty()) {
-            reasons.add("Purchase Date '" + raw.trim() + "' does not match the selected format "
-                    + dateFormat.pattern());
+            reasons.add("Purchase Date '" + raw.trim() + "' is not a recognisable date");
             return null;
         }
         return parsed.get();
     }
 
-    /**
-     * Zero is valid, per the brief's promotional-inventory case. Values are normalised to two
-     * decimal places with HALF_UP; a price carrying more precision than a currency can express
-     * is rounded rather than rejected, since spreadsheets routinely produce such values from
-     * formulas. Say the word if you would rather reject them outright.
-     */
-    private BigDecimal validateUnitPrice(String raw, List<String> reasons) {
+    private static BigDecimal validateUnitPrice(String raw, List<String> reasons) {
         if (raw.isBlank()) {
             reasons.add("Unit Price is required");
             return null;
         }
-        String cleaned = stripCurrencySymbol(raw.trim());
         try {
-            BigDecimal price = new BigDecimal(cleaned);
+            BigDecimal price = new BigDecimal(cleanNumber(raw));
             if (price.signum() < 0) {
-                reasons.add("Unit Price must be zero or greater, but was " + price.toPlainString());
+                reasons.add("Unit Price must not be negative, but was " + price.toPlainString());
                 return null;
             }
             return price.setScale(2, RoundingMode.HALF_UP);
         } catch (NumberFormatException e) {
-            reasons.add("Unit Price '" + raw.trim() + "' is not a valid decimal value");
+            reasons.add("Unit Price '" + raw.trim() + "' is not a valid amount");
             return null;
         }
     }
 
-    /**
-     * Excel hands back whole numbers as "2" or "2.0" depending on cell formatting, so an integral
-     * decimal is accepted while a genuinely fractional quantity such as "2.5" is not.
-     */
-    private int validateQuantity(String raw, List<String> reasons) {
+    private static int validateQuantity(String raw, List<String> reasons) {
         if (raw.isBlank()) {
             reasons.add("Quantity is required");
             return 0;
         }
         try {
-            BigDecimal value = new BigDecimal(raw.trim()).stripTrailingZeros();
+            BigDecimal value = new BigDecimal(cleanNumber(raw)).stripTrailingZeros();
             if (value.scale() > 0) {
                 reasons.add("Quantity '" + raw.trim() + "' must be a whole number");
                 return 0;
@@ -174,10 +126,10 @@ public final class RowValidator {
         }
     }
 
-    private static String stripCurrencySymbol(String value) {
-        if (!value.isEmpty() && CURRENCY_SYMBOLS.indexOf(value.charAt(0)) >= 0) {
-            return value.substring(1).trim();
-        }
-        return value;
+    private static String cleanNumber(String raw) {
+        String value = raw.trim()
+                .replaceAll("^[" + CURRENCY_SYMBOLS + "]\\s*", "")
+                .replaceAll("\\s*[" + CURRENCY_SYMBOLS + "]$", "");
+        return value.matches("\\d{1,3}(,\\d{3})+(\\.\\d+)?") ? value.replace(",", "") : value;
     }
 }
